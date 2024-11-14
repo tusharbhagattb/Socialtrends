@@ -1,0 +1,45 @@
+name: Minify Code
+
+on:
+  push:
+    branches:
+      - main  # This workflow runs every time you push changes to the main branch.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install Minification Packages
+        run: |
+          npm install html-minifier -g
+          npm install clean-css-cli -g
+          npm install uglify-js -g
+
+      - name: Minify HTML
+        run: |
+          mkdir -p ./minified
+          html-minifier --input-dir ./ --output-dir ./minified --file-ext html --collapse-whitespace --remove-comments --minify-css true --minify-js true
+
+      - name: Minify CSS
+        run: cleancss -o ./minified/styles.css ./styles.css
+
+      - name: Minify JavaScript
+        run: uglifyjs ./scripts.js -o ./minified/scripts.js -c -m
+
+      - name: Commit Minified Files
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add ./minified/*.html ./minified/styles.css ./minified/scripts.js
+          git commit -m "Minify HTML, CSS, and JavaScript files"
+          git push
+          
